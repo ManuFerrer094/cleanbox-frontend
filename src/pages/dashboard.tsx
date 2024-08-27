@@ -9,6 +9,7 @@ const Dashboard = () => {
     const fetchEmails = async () => {
       try {
         const response = await fetch('https://cleanbox-backend.vercel.app/api/emails', {
+          method: 'GET',
           credentials: 'include', // Importante para enviar cookies en la solicitud
         });
         const data = await response.json();
@@ -18,7 +19,7 @@ const Dashboard = () => {
       } finally {
         setLoading(false);
       }
-    };
+    };    
 
     fetchEmails();
   }, []);
