@@ -1,13 +1,63 @@
-import LoginButton from '../components/LoginButton';
+import { useEffect, useState } from 'react';
 
-export default function Home() {
+interface Email {
+  id: string;
+  subject: string;
+  snippet: string;
+}
+
+export default function EmailsPage() {
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEmails = async () => {
+      try {
+        // Utilizamos la variable de entorno para la URL del backend
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails`, {
+          credentials: 'include', // Importante para enviar las cookies
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al obtener correos');
+        }
+
+        const data: Email[] = await response.json();
+        setEmails(data);
+      } catch (error) {
+        setError('No se pudieron cargar los correos.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmails();
+  }, []);
+
+  if (loading) {
+    return <p>Cargando correos...</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Bienvenido a CleanBox</h1>
-        <p className="mb-6">Inicia sesión con Google para acceder a tus correos.</p>        
-        <LoginButton />
-      </div>
+    <div>
+      <h1>Correos Promocionales y Sociales</h1>
+      {emails.length === 0 ? (
+        <p>No se encontraron correos.</p>
+      ) : (
+        <ul>
+          {emails.map((email) => (
+            <li key={email.id}>
+              <h3>{email.subject}</h3>
+              <p>{email.snippet}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

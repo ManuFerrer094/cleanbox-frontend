@@ -1,29 +1,46 @@
 "use client"; // Asegura que este componente se ejecute en el cliente
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function LoginButton() {
   const [emails, setEmails] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setLoading(true);
+  useEffect(() => {
+    // Intenta obtener los correos electrónicos después de la carga inicial
+    const fetchEmails = async () => {
+      setLoading(true);
 
-    try {
-      // Redirige a la ruta de autenticación de Google
-      window.location.href = '/api/auth/google';
+      try {
+        const response = await fetch('https://cleanbox-backend.vercel.app/api/emails', {
+          credentials: 'include', // Importante para enviar cookies en la solicitud
+        });
 
-      // Después de autenticarse, obtén los correos electrónicos
-      const response = await fetch('https://cleanbox-backend.vercel.app/api/emails', {
-        credentials: 'include', // Importante para enviar cookies en la solicitud
-      });
-      const data = await response.json();
-      setEmails(data);
-    } catch (error) {
-      console.error('Error al obtener correos electrónicos:', error);
-    } finally {
-      setLoading(false);
-    }
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setEmails(data);
+        } else {
+          throw new Error('Respuesta inesperada del servidor');
+        }
+      } catch (error: any) {
+        setError(error.message || 'Error desconocido');
+        console.error('Error al obtener correos electrónicos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmails();
+  }, []); // El array vacío asegura que esto se ejecute solo una vez, después de que la página haya cargado
+
+  const handleLogin = () => {
+    // Redirige a la ruta de autenticación de Google
+    window.location.href = '/api/auth/google';
   };
 
   if (loading) {
@@ -36,6 +53,8 @@ export default function LoginButton() {
         Iniciar sesión con Google
       </button>
       
+      {error && <p className="text-red-500">Error: {error}</p>}
+      
       {emails.length > 0 && (
         <ul>
           {emails.map((email) => (
@@ -47,7 +66,7 @@ export default function LoginButton() {
         </ul>
       )}
       
-      {emails.length === 0 && !loading && (
+      {emails.length === 0 && !loading && !error && (
         <p>No se encontraron correos promocionales o sociales.</p>
       )}
     </div>
