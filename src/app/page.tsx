@@ -14,36 +14,35 @@ export default function EmailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Estado para la autenticación
 
+  // Verificar si hay un token en la URL y almacenarlo
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('token');
+    if (token) {
+      localStorage.setItem('token', token); // Almacenar el token en localStorage
+      setIsAuthenticated(true);
+      window.history.replaceState({}, document.title, '/'); // Limpiar el token de la URL
+    } else {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        setIsAuthenticated(true);
+      }
+    }
+  }, []);
+
   // Función para manejar la autenticación
   const handleLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`; // Redirige a la autenticación de Google
   };
 
-  // Función para verificar si el usuario está autenticado
-  const checkAuth = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/check-session`, {
-        credentials: 'include', // Importante para enviar las cookies
-      });
-
-      if (response.ok) {
-        setIsAuthenticated(true); // Usuario autenticado
-      } else {
-        setIsAuthenticated(false); // Usuario no autenticado
-      }
-    } catch (error) {
-      setIsAuthenticated(false);
-    }
-  };
-
   useEffect(() => {
-    checkAuth(); // Comprobamos la autenticación al cargar la página
-
     if (isAuthenticated) {
       const fetchEmails = async () => {
         try {
+          const token = localStorage.getItem('token');
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails`, {
-            credentials: 'include', // Importante para enviar las cookies
+            headers: {
+              Authorization: `Bearer ${token}`, // Enviar el token JWT en el encabezado Authorization
+            },
           });
 
           if (!response.ok) {
@@ -61,7 +60,7 @@ export default function EmailsPage() {
 
       fetchEmails();
     }
-  }, [isAuthenticated]); // Dependencia en isAuthenticated para volver a cargar correos después del login
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
