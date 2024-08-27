@@ -5,24 +5,26 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Obtener correos electrónicos desde el backend
     const fetchEmails = async () => {
       try {
         const response = await fetch('https://cleanbox-backend.vercel.app/api/emails', {
-          method: 'GET',
-          credentials: 'include', // Importante para enviar cookies en la solicitud
+          credentials: 'include',
         });
-        const data = await response.json();
-        setEmails(data);
+        if (response.ok) {
+          const data = await response.json();
+          setEmails(data);
+        } else {
+          console.error('Error: ', response.statusText);
+        }
       } catch (error) {
         console.error('Error al obtener correos electrónicos:', error);
       } finally {
         setLoading(false);
       }
-    };    
-
+    };
+  
     fetchEmails();
-  }, []);
+  }, []);  
 
   if (loading) {
     return <p>Cargando correos...</p>;
@@ -30,7 +32,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1>Dashboard</h1>
+      <h1>Dashboard Actualizado</h1>
       {emails.length > 0 ? (
         <ul>
           {emails.map((email) => (
