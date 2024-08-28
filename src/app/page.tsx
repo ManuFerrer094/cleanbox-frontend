@@ -6,7 +6,7 @@ interface Email {
   id: string;
   subject: string;
   snippet: string;
-  unsubscribeLink?: string; // Nuevo campo para el enlace de desuscripción
+  unsubscribeLink?: string;
 }
 
 export default function EmailsPage() {
@@ -33,37 +33,60 @@ export default function EmailsPage() {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
+  const fetchEmails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener correos');
+      }
+
+      const data: Email[] = await response.json();
+      setEmails(data);
+    } catch (error) {
+      setError('No se pudieron cargar los correos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
-      const fetchEmails = async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error('Error al obtener correos');
-          }
-
-          const data: Email[] = await response.json();
-          setEmails(data);
-        } catch (error) {
-          setError('No se pudieron cargar los correos.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchEmails();
     }
   }, [isAuthenticated]);
 
+  const handleDelete = async (emailId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ messageId: emailId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar el correo.');
+      }
+
+      // Actualizar la lista de correos después de eliminar uno
+      setEmails(emails.filter((email) => email.id !== emailId));
+    } catch (error) {
+      setError('No se pudo eliminar el correo.');
+    }
+  };
+
   const handleUnsubscribe = (unsubscribeLink: string | undefined) => {
     if (unsubscribeLink) {
-      window.open(unsubscribeLink, '_blank'); // Abre el enlace en una nueva pestaña
+      window.open(unsubscribeLink, '_blank');
     } else {
       alert('No se encontró el enlace de desuscripción.');
     }
@@ -97,9 +120,21 @@ export default function EmailsPage() {
             <li key={email.id}>
               <h3>{email.subject}</h3>
               <p>{email.snippet}</p>
-              {email.unsubscribeLink && (
-                <button onClick={() => handleUnsubscribe(email.unsubscribeLink)}>Desuscribirse</button>
-              )}
+              <div>
+                {/* Botón de Eliminar */}
+                <button onClick={() => handleDelete(email.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg mr-2">
+                  Eliminar
+                </button>
+                {/* Botón de Desuscribirse */}
+                {email.unsubscribeLink && (
+                  <button
+                    onClick={() => handleUnsubscribe(email.unsubscribeLink)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                  >
+                    Desuscribirse
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
