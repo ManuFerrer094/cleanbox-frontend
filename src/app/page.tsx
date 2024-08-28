@@ -30,6 +30,7 @@ export default function EmailsPage() {
   }, []);
 
   const handleLogin = () => {
+    // Aquí se asegura que se redirige a la URL correcta según el entorno
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
@@ -77,7 +78,6 @@ export default function EmailsPage() {
         throw new Error('No se pudo eliminar el correo.');
       }
 
-      // Actualizar la lista de correos después de eliminar uno
       setEmails(emails.filter((email) => email.id !== emailId));
     } catch (error) {
       setError('No se pudo eliminar el correo.');
@@ -121,11 +121,9 @@ export default function EmailsPage() {
               <h3>{email.subject}</h3>
               <p>{email.snippet}</p>
               <div>
-                {/* Botón de Eliminar */}
                 <button onClick={() => handleDelete(email.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg mr-2">
                   Eliminar
                 </button>
-                {/* Botón de Desuscribirse */}
                 {email.unsubscribeLink && (
                   <button
                     onClick={() => handleUnsubscribe(email.unsubscribeLink)}
