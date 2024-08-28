@@ -12,15 +12,15 @@ export default function EmailsPage() {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Estado para la autenticación
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Verificar si hay un token en la URL y almacenarlo
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('token');
     if (token) {
-      localStorage.setItem('token', token); // Almacenar el token en localStorage
+      localStorage.setItem('token', token);
       setIsAuthenticated(true);
-      window.history.replaceState({}, document.title, '/'); // Limpiar el token de la URL
+      window.history.replaceState({}, document.title, '/');
     } else {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
@@ -31,7 +31,59 @@ export default function EmailsPage() {
 
   // Función para manejar la autenticación
   const handleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`; // Redirige a la autenticación de Google
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+  };
+
+  // Función para eliminar un correo
+  const handleDelete = async (emailId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ messageId: emailId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar el correo');
+      }
+
+      // Eliminar el correo del estado después de eliminarlo en el servidor
+      setEmails(emails.filter(email => email.id !== emailId));
+    } catch (error) {
+      setError('No se pudo eliminar el correo.');
+    }
+  };
+
+  // Función para desuscribirse
+  const handleUnsubscribe = async (emailId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/unsubscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ messageId: emailId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al desuscribirse');
+      }
+
+      const data = await response.json();
+      if (data.unsubscribeLink) {
+        window.open(data.unsubscribeLink, '_blank');
+      } else {
+        throw new Error('No se encontró un enlace de desuscripción');
+      }
+    } catch (error) {
+      setError('No se pudo desuscribir.');
+    }
   };
 
   useEffect(() => {
@@ -41,7 +93,7 @@ export default function EmailsPage() {
           const token = localStorage.getItem('token');
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails`, {
             headers: {
-              Authorization: `Bearer ${token}`, // Enviar el token JWT en el encabezado Authorization
+              Authorization: `Bearer ${token}`,
             },
           });
 
@@ -90,6 +142,8 @@ export default function EmailsPage() {
             <li key={email.id}>
               <h3>{email.subject}</h3>
               <p>{email.snippet}</p>
+              <button onClick={() => handleDelete(email.id)}>Eliminar</button>
+              <button onClick={() => handleUnsubscribe(email.id)}>Desuscribirse</button>
             </li>
           ))}
         </ul>
