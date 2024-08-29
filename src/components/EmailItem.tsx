@@ -17,90 +17,70 @@ export default function EmailItem({ email, onEmailDelete }: EmailItemProps) {
   const [replyText, setReplyText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleDelete = async () => {
+  const handleRequest = async (url: string, method: string, body: object) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ messageId: email.id }),
+        body: JSON.stringify(body),
+        credentials: 'include', // Si estás usando cookies
       });
 
-      if (!response.ok) {
-        throw new Error('No se pudo eliminar el correo.');
+      const contentType = response.headers.get('content-type');
+
+      if (response.status === 403) {
+        setError('No tienes permiso para realizar esta acción. Por favor, verifica tu sesión.');
+        return null;
       }
 
+      if (!response.ok) {
+        const errorText = await response.text(); // Leer el cuerpo de la respuesta como texto
+        console.error('Error en la solicitud:', errorText); // Mostrar el error en la consola
+        throw new Error('Ocurrió un error durante la solicitud.');
+      }
+
+      // Manejar diferentes tipos de respuestas
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json(); // Si es JSON, procesarlo como tal
+      } else {
+        return await response.text(); // De lo contrario, devolver el texto
+      }
+    } catch (error: any) {
+      setError(error.message);
+      return null;
+    }
+  };
+
+  const handleDelete = async () => {
+    const result = await handleRequest(`${process.env.NEXT_PUBLIC_API_URL}/api/delete`, 'POST', { messageId: email.id });
+    if (result) {
       onEmailDelete(email.id);
-    } catch (error) {
-      setError('No se pudo eliminar el correo.');
     }
   };
 
   const handleReply = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ messageId: email.id, text: replyText }),
-      });
-
-      if (!response.ok) {
-        throw new Error('No se pudo enviar la respuesta.');
-      }
-
+    const result = await handleRequest(`${process.env.NEXT_PUBLIC_API_URL}/api/reply`, 'POST', { messageId: email.id, text: replyText });
+    if (result) {
       setReplyText('');
-    } catch (error) {
-      setError('No se pudo enviar la respuesta.');
     }
   };
 
   const handleArchive = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/archive`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ messageId: email.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error('No se pudo archivar el correo.');
-      }
-
-      onEmailDelete(email.id); // Remueve el correo de la lista al archivarlo
-    } catch (error) {
-      setError('No se pudo archivar el correo.');
+    const result = await handleRequest(`${process.env.NEXT_PUBLIC_API_URL}/api/archive`, 'POST', { messageId: email.id });
+    if (result) {
+      onEmailDelete(email.id);
     }
   };
 
   const handleAddLabel = async (label: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/label`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ messageId: email.id, label }),
-      });
-
-      if (!response.ok) {
-        throw new Error('No se pudo añadir la etiqueta.');
-      }
-
+    const result = await handleRequest(`${process.env.NEXT_PUBLIC_API_URL}/api/label`, 'POST', { messageId: email.id, label });
+    if (result) {
       alert('Etiqueta añadida exitosamente');
-    } catch (error) {
+    } else {
       setError('No se pudo añadir la etiqueta.');
     }
   };

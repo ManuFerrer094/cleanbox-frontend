@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import EmailList from '../components/EmailList';
-import SearchBar from '../components/SearchBar';
-import DeleteAllModal from '../components/DeleteAllModal';
+import { useRouter } from 'next/navigation';
+import EmailList from '@/components/EmailList';
+import SearchBar from '@/components/SearchBar';
+import DeleteAllModal from '@/components/DeleteAllModal';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Email {
   id: string;
@@ -12,48 +14,64 @@ interface Email {
 }
 
 export default function EmailsPage() {
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
   const [emails, setEmails] = useState<Email[]>([]);
   const [totalEmails, setTotalEmails] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
   const [pageToken, setPageToken] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ action: string; emailId: string | null }>({ action: '', emailId: null });
   const [deletingAll, setDeletingAll] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, loading, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchEmails();
+    }
+    // El fetchEmails se define fuera del useEffect para asegurar que se llame siempre en el mismo lugar
+  }, [isAuthenticated]);
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return null; // Retornamos null para evitar renderizar contenido no autorizado
+  }
+
   const fetchEmails = async (token = '', searchQuery = '') => {
     try {
-      const storedToken = localStorage.getItem('token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails?pageToken=${token}&query=${searchQuery}`, {
         headers: {
-          Authorization: `Bearer ${storedToken}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // Token de autenticación
         },
+        credentials: 'include', // Para incluir las cookies si estás usando cookies HTTP-only
       });
-
+  
       if (!response.ok) {
         throw new Error('Error al obtener correos');
       }
-
+  
       const data = await response.json();
       setEmails(data.messages);
       setPageToken(data.nextPageToken);
       setTotalEmails(data.totalEmails);
     } catch (error) {
       setError('No se pudieron cargar los correos.');
-    } finally {
-      setLoading(false);
     }
   };
-
-  const handleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
-  };
+  
 
   const handleSearch = () => {
     setEmails([]);
     setPageToken(null);
-    fetchEmails(undefined, query);
+    fetchEmails('', query);
   };
 
   const handleEmailDelete = (emailId: string) => {
@@ -64,11 +82,10 @@ export default function EmailsPage() {
   const handleDeleteAll = async () => {
     try {
       setDeletingAll(true);
-      const token = localStorage.getItem('token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete/all`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
 
@@ -76,8 +93,8 @@ export default function EmailsPage() {
         throw new Error('Error al eliminar todos los correos.');
       }
 
-      setEmails([]); // Limpiar la lista de correos después de eliminarlos
-      setTotalEmails(0); // Restablecer el total de correos
+      setEmails([]);
+      setTotalEmails(0);
     } catch (error) {
       setError('No se pudieron eliminar todos los correos.');
     } finally {
@@ -85,41 +102,6 @@ export default function EmailsPage() {
       setConfirmAction({ action: '', emailId: null });
     }
   };
-
-  useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get('token');
-    if (token) {
-      localStorage.setItem('token', token);
-      setIsAuthenticated(true);
-      window.history.replaceState({}, document.title, '/');
-    } else {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        setIsAuthenticated(true);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchEmails();
-    }
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h1 className="text-2xl mb-4 text-gray-900 dark:text-white">Por favor, inicia sesión para ver tus correos</h1>
-        <button onClick={handleLogin} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
-          Iniciar Sesión con Google
-        </button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return <p className="text-center text-gray-900 dark:text-white">Cargando correos...</p>;
-  }
 
   if (error) {
     return <p className="text-center text-red-500">{error}</p>;

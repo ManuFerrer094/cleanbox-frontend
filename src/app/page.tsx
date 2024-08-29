@@ -1,7 +1,15 @@
-// app/page.tsx
-import EmailsPage from '../pages/EmailsPage';
-import './globals.css';
+// src/app/page.tsx
+"use client";
 
-export default function Page() {
-  return <EmailsPage />;
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+export default function DashboardHome() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/dashboard/emails');
+  }, [router]);
+
+  return null;
 }

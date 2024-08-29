@@ -1,16 +1,16 @@
+// src/app/layout.tsx
+import './globals.css';
 import { ReactNode } from 'react';
+
+export const metadata = {
+  title: 'Dashboard',
+  description: 'Application Dashboard',
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <title>CleanBox</title>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </head>
-      <body>
-        {children}
-      </body>
+    <html lang="es">
+      <body>{children}</body>
     </html>
   );
 }
