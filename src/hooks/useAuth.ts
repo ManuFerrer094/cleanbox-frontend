@@ -11,7 +11,7 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://localhost:5000/auth/check', { // Cambiado a localhost:5000
+        const response = await fetch('https://cleanbox-backend.vercel.app/auth/check', { // Cambiado a localhost:5000
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
