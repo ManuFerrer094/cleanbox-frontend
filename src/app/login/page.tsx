@@ -50,13 +50,6 @@ export default function LoginPage() {
           Iniciar Sesión con Google
         </button>
       )}
-      <div className="max-w-full px-4">
-        {token ? (
-          <p className="break-words max-w-lg">Token: {token}</p>
-        ) : (
-          <p>Todavía no hay token</p>
-        )}
-      </div>
     </div>
   );
 }
