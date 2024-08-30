@@ -1,18 +1,29 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
 
+function getEnvVar(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Environment variable ${key} is not defined`);
+  }
+  return value;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      getEnvVar('GOOGLE_CLIENT_ID'),
+      getEnvVar('GOOGLE_CLIENT_SECRET'),
+      getEnvVar('GOOGLE_REDIRECT_URI')
     );
 
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
-      scope: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.modify'],
+      scope: [
+        getEnvVar('GOOGLE_SCOPE_GMAIL_READONLY'),
+        getEnvVar('GOOGLE_SCOPE_GMAIL_MODIFY'),
+      ],
     });
 
     // Redirigir al usuario a la URL de autenticación de Google

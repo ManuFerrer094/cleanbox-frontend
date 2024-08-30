@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: '/auth/:path*',
-        destination: 'https://cleanbox-backend.vercel.app/auth/:path*', // Asegúrate de que el backend está corriendo en este puerto
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/auth/:path*`, // Usa la variable de entorno para la URL del backend
       },
     ];
   },

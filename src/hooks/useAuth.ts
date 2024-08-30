@@ -11,7 +11,7 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('https://cleanbox-backend.vercel.app/auth/check', { // Cambiado a localhost:5000
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check`, { // Usar la variable de entorno para la URL del backend
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
