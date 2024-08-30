@@ -109,12 +109,12 @@ export default function EmailsPage() {
     <div className="container mx-auto p-4 text-gray-900 dark:text-white">
       <div className="mb-4 flex justify-between items-center">
         <h1 className="text-3xl font-bold">Correos Promocionales y Sociales</h1>
-        <div className="flex items-center space-x-4">
+        {/* <div className="flex items-center space-x-4">
           <p>Total correos: {totalEmails}</p>
           <button onClick={() => setConfirmAction({ action: 'delete-all', emailId: null })} className="bg-red-500 text-white px-4 py-2 rounded-lg" disabled={deletingAll}>
             {deletingAll ? 'Eliminando...' : 'Eliminar todos'}
           </button>
-        </div>
+        </div> */}
       </div>
 
       <SearchBar query={query} setQuery={setQuery} handleSearch={handleSearch} />
