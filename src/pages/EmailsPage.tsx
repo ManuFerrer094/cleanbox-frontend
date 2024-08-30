@@ -37,21 +37,12 @@ export default function EmailsPage() {
     // El fetchEmails se define fuera del useEffect para asegurar que se llame siempre en el mismo lugar
   }, [isAuthenticated]);
 
-  if (loading) {
-    return <div>Cargando...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return null; // Retornamos null para evitar renderizar contenido no autorizado
-  }
-
   const fetchEmails = async (token = '', searchQuery = '') => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails?pageToken=${token}&query=${searchQuery}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`, // Token de autenticación
         },
-        credentials: 'include', // Para incluir las cookies si estás usando cookies HTTP-only
       });
   
       if (!response.ok) {
@@ -59,14 +50,13 @@ export default function EmailsPage() {
       }
   
       const data = await response.json();
-      setEmails(data.messages);
-      setPageToken(data.nextPageToken);
-      setTotalEmails(data.totalEmails);
+      setEmails(data.messages || []);
+      setPageToken(data.nextPageToken || null);
+      setTotalEmails(data.totalEmails || 0);
     } catch (error) {
       setError('No se pudieron cargar los correos.');
     }
   };
-  
 
   const handleSearch = () => {
     setEmails([]);
@@ -105,6 +95,14 @@ export default function EmailsPage() {
 
   if (error) {
     return <p className="text-center text-red-500">{error}</p>;
+  }
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return null; // Evitar renderizar contenido no autorizado
   }
 
   return (

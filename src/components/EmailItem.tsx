@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Email {
   id: string;
@@ -17,9 +17,24 @@ export default function EmailItem({ email, onEmailDelete }: EmailItemProps) {
   const [replyText, setReplyText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (token) {
+      localStorage.setItem('token', token);
+      window.history.replaceState({}, document.title, '/dashboard'); // Remueve el token de la URL y redirige
+    }
+  }, []);
+
   const handleRequest = async (url: string, method: string, body: object) => {
     try {
       const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('No se encontró un token de autenticación. Por favor, inicia sesión de nuevo.');
+      }
+
       const response = await fetch(url, {
         method: method,
         headers: {
@@ -27,7 +42,6 @@ export default function EmailItem({ email, onEmailDelete }: EmailItemProps) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(body),
-        credentials: 'include', // Si estás usando cookies
       });
 
       const contentType = response.headers.get('content-type');
@@ -38,16 +52,15 @@ export default function EmailItem({ email, onEmailDelete }: EmailItemProps) {
       }
 
       if (!response.ok) {
-        const errorText = await response.text(); // Leer el cuerpo de la respuesta como texto
-        console.error('Error en la solicitud:', errorText); // Mostrar el error en la consola
+        const errorText = await response.text();
+        console.error('Error en la solicitud:', errorText);
         throw new Error('Ocurrió un error durante la solicitud.');
       }
 
-      // Manejar diferentes tipos de respuestas
       if (contentType && contentType.includes('application/json')) {
-        return await response.json(); // Si es JSON, procesarlo como tal
+        return await response.json();
       } else {
-        return await response.text(); // De lo contrario, devolver el texto
+        return await response.text();
       }
     } catch (error: any) {
       setError(error.message);
@@ -77,6 +90,7 @@ export default function EmailItem({ email, onEmailDelete }: EmailItemProps) {
   };
 
   const handleAddLabel = async (label: string) => {
+    if (!label) return; // Evitar agregar etiquetas vacías
     const result = await handleRequest(`${process.env.NEXT_PUBLIC_API_URL}/api/label`, 'POST', { messageId: email.id, label });
     if (result) {
       alert('Etiqueta añadida exitosamente');

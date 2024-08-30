@@ -10,31 +10,45 @@ export function useAuth() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        setLoading(false);
+        router.push('/login'); // Redirige a la página de inicio de sesión si no hay token
+        return;
+      }
+
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
-          credentials: 'include',
         });
-  
+
         if (!response.ok) {
           throw new Error('Authentication check failed');
         }
-  
+
         const data = await response.json();
         setIsAuthenticated(data.isAuthenticated);
+
+        if (!data.isAuthenticated) {
+          localStorage.removeItem('token'); // Elimina el token si la autenticación falla
+          router.push('/login');
+        }
       } catch (error) {
         console.error('Error during authentication check:', error);
-        setIsAuthenticated(false);
+        localStorage.removeItem('token'); // Elimina el token si ocurre un error
+        router.push('/login');
       } finally {
         setLoading(false);
       }
     };
-  
+
     checkAuth();
-  }, []);  
+  }, [router]);
 
   return { isAuthenticated, loading };
 }
