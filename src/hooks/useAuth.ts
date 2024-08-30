@@ -11,18 +11,18 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check`, { // Usar la variable de entorno para la URL del backend
-          method: 'GET',
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // Esto asegura que las cookies se envíen con la solicitud
+          credentials: 'include',
         });
-
+  
         if (!response.ok) {
           throw new Error('Authentication check failed');
         }
-
+  
         const data = await response.json();
         setIsAuthenticated(data.isAuthenticated);
       } catch (error) {
@@ -32,9 +32,9 @@ export function useAuth() {
         setLoading(false);
       }
     };
-
-    checkAuth(); // Verificar la autenticación al cargar el componente
-  }, []);
+  
+    checkAuth();
+  }, []);  
 
   return { isAuthenticated, loading };
 }
