@@ -1,4 +1,3 @@
-// src/components/DashboardLayout.tsx
 import { ReactNode } from 'react';
 
 interface DashboardLayoutProps {

@@ -23,7 +23,7 @@ export default function EmailItem({ email, onEmailDelete }: EmailItemProps) {
 
     if (token) {
       localStorage.setItem('token', token);
-      window.history.replaceState({}, document.title, '/dashboard'); // Remueve el token de la URL y redirige
+      window.history.replaceState({}, document.title, '/dashboard');
     }
   }, []);
 
@@ -90,7 +90,7 @@ export default function EmailItem({ email, onEmailDelete }: EmailItemProps) {
   };
 
   const handleAddLabel = async (label: string) => {
-    if (!label) return; // Evitar agregar etiquetas vacías
+    if (!label) return;
     const result = await handleRequest(`${process.env.NEXT_PUBLIC_API_URL}/api/label`, 'POST', { messageId: email.id, label });
     if (result) {
       alert('Etiqueta añadida exitosamente');

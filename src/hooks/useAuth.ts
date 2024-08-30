@@ -14,7 +14,7 @@ export function useAuth() {
 
       if (!token) {
         setLoading(false);
-        router.push('/login'); // Redirige a la página de inicio de sesión si no hay token
+        router.push('/login');
         return;
       }
 
@@ -35,12 +35,12 @@ export function useAuth() {
         setIsAuthenticated(data.isAuthenticated);
 
         if (!data.isAuthenticated) {
-          localStorage.removeItem('token'); // Elimina el token si la autenticación falla
+          localStorage.removeItem('token');
           router.push('/login');
         }
       } catch (error) {
         console.error('Error during authentication check:', error);
-        localStorage.removeItem('token'); // Elimina el token si ocurre un error
+        localStorage.removeItem('token');
         router.push('/login');
       } finally {
         setLoading(false);

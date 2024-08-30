@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: '/auth/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/auth/:path*`, // Usa la variable de entorno para la URL del backend
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/auth/:path*`,
       },
     ];
   },

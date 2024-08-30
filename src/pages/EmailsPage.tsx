@@ -34,14 +34,13 @@ export default function EmailsPage() {
     if (isAuthenticated) {
       fetchEmails();
     }
-    // El fetchEmails se define fuera del useEffect para asegurar que se llame siempre en el mismo lugar
   }, [isAuthenticated]);
 
   const fetchEmails = async (token = '', searchQuery = '') => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/emails?pageToken=${token}&query=${searchQuery}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // Token de autenticación
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
   
@@ -102,7 +101,7 @@ export default function EmailsPage() {
   }
 
   if (!isAuthenticated) {
-    return null; // Evitar renderizar contenido no autorizado
+    return null;
   }
 
   return (

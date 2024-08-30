@@ -10,26 +10,22 @@ export default function LoginPage() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Verifica si ya existe un token en localStorage
     const existingToken = localStorage.getItem('token');
 
     if (existingToken) {
-      setToken(existingToken); // Establece el token en el estado para mostrarlo en pantalla
+      setToken(existingToken); 
     } else {
-      // Si no hay un token en localStorage, verifica si hay un token en la URL
       const urlParams = new URLSearchParams(window.location.search);
       const tokenFromUrl = urlParams.get('token');
 
       if (tokenFromUrl) {
-        // Si se encuentra un token en la URL, guárdalo en localStorage
         localStorage.setItem('token', tokenFromUrl);
-        setToken(tokenFromUrl); // Establece el token en el estado para mostrarlo en pantalla
+        setToken(tokenFromUrl); 
       }
     }
   }, [router]);
 
   useEffect(() => {
-    // Redirige al dashboard si hay un token en el estado o si ya está autenticado
     if (token || isAuthenticated) {
       router.replace('/dashboard');
     }

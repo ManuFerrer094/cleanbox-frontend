@@ -20,7 +20,7 @@ export default function EmailsDashboardPage() {
   }
 
   if (!isAuthenticated) {
-    return null; // Retorna null para evitar renderizar emails si no está autenticado.
+    return null;
   }
 
   return <EmailsPage />;
